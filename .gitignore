@@ -1,0 +1,25 @@
+# Vivado temporary files
+*.jou
+*.log
+*.debug
+*.str
+*.zip
+*.tmp
+*.backup.*
+vivado_pid*.str
+vivado_pid*.tag
+
+# Vivado project artifacts (automatically regenerated)
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.gen/
+
+# SDK/Vitis artifacts
+.Xil/
+*.sdk/
+*.vitis/
+.metadata/
+RemoteSystemsTempFiles/
