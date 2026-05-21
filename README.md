@@ -47,4 +47,16 @@ I want to create a sonar that only uses an FPGA, no embedded processor. So I nee
 - Client side interface will be 1 byte wide axi stream using tlast to indicate the end of a packet. There will be an incoming axi stream for client to server communication and an outgoing axi stream for server to client communication
 - The fpga side interface will be an ingoing axi stream to stream data through the core to the client. As well as the 32 registers (half readable and half writeable). The register written flag, the trigger signal, and the memory buffer that is still TBD
 
+## Message Structure
+This core may end up being hooked up to an ethernet core, an LVDS core, etc. It is not known if there will be reliable delivery (UDP instead of TCP) meaning we should have some sort of call and response system with identifiers so the client knows his packet was delivered and acknowledged. Each packet (traveling from client to server or server to client) will start with a single byte indicating the packet type. '0' will be reserved for data streaming from the fpga through the core. Every command from the client will be followed by 2 bytes indicating a command number/ID and the client should increment this number with every new command he sends. Every command from the client will get a response. After the single byte indicating the packet type, every response will have 2 bytes that is the command number/ID it is responding to. Then it will be followed by its contents. And everything is big endian because I hate little endian. The various commands/responses and their packet type numbers are shown below:
+1. Unknown or malformed command. This is a response when the command is an unknown command or it is a known command that was not formatted properly. No registers are written. This is the one exception where it does not contain an ID it is responding to, because a malformed command may be missing said ID
+2. Command successfully acknowledged. This is a response when the command was successfully acknowledged and either the trigger signal was output or registers were successfully written to
+3. Write a single register. This is a command from the client to write a single register. Its contents will be a single byte indicating the register address followed by 4 bytes for the register contents. Response will be a 1 or 2
+4. Write all registers. This is a command to write all 16 writeable registers at once. Its contents will be 64 bytes (16 registers * 4 bytes) where the first 4 bytes are register 0, then register 1, etc. Response will be a 1 or 2
+5. Request to read a single register. This will be a command to read one register whose contents will be a single byte: the address of the register to read. Response will be 1 or 6
+6. Response to read a single register. This will be a response to read one register command. Its contents will be 1 byte indicating the register address, followed by 4 bytes of the register contents
+7. Request to read all registers. This will be a command to read all registers at once. Has no content. Response will be 1 or 8.
+8. Response to read all registers. This will be 128 bytes (32 registers * 4 bytes) where the data is the register contents
+9. Trigger request. This is the command to output a trigger pulse. Response will be 1 or 2
+TBD memory buffer
 
